@@ -1,32 +1,129 @@
-# Prerequisites
-*.d
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+#define dht_pin A1
+#define sensorUmidade A0
+#define DHTPIN A1
+#define DHTTYPE DHT11
+const int pinLDR = A2;
 
-# Precompiled Headers
-*.gch
-*.pch
+DHT dht(dht_pin, DHTTYPE);
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
+LiquidCrystal_I2C lcd(0x27, 16, 2); // Defina o endereço do LCD I2C
 
-# Fortran module files
-*.mod
-*.smod
+void setup() {
+  pinMode(13, OUTPUT);
+  Serial.begin(115200);
+  delay(1000);
+  dht.begin();
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
+  lcd.init(); // Inicialize o LCD
+  lcd.backlight();
+  byte Count = 1;
+  lcd.clear();
 
-# Executables
-*.exe
-*.out
-*.app
+  // ... (resto do código de inicialização)
+
+  Serial.begin(115200); // Inicializa a comunicação serial com uma taxa de 9600 bauds
+}
+
+void loop() {
+  lcd.clear();
+
+  unsigned long tempoAtual = millis();
+
+  {
+    int leitura = analogRead(sensorUmidade);
+
+    if (leitura <= 1023 && leitura >= 682) {
+    
+
+      lcd.setCursor(4, 0);
+      lcd.print(" SOLO");
+      lcd.setCursor(4, 1);
+      lcd.print("MUITO UMIDO");
+      Serial.begin(115200);
+      Serial.println("SOLO MUITO UMIDO");
+      delay(1000);
+    } else if (leitura <= 681 && leitura >= 340) {
+ 
+
+      lcd.setCursor(0, 0);
+      lcd.print(" SOLO");
+      lcd.setCursor(0, 1);
+      lcd.print("UMIDO");
+      Serial.begin(115200);
+      Serial.println("UMIDO");
+      delay(1000);
+    } else if (leitura <= 339 && leitura >= 0) {
+     
+
+      lcd.setCursor(0, 0);
+      lcd.print(" SOLO");
+      lcd.setCursor(0, 1);
+      lcd.print(" SECO      ");
+      Serial.begin(115200);
+      Serial.println("SOLO SECO");
+      delay(1000);
+    }
+    delay(2000);
+  }
+
+  lcd.clear();
+
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(" ");
+  lcd.setCursor(7, 0);
+  lcd.print(t, 1);
+  lcd.setCursor(12, 0);
+  lcd.write(0);
+  lcd.setCursor(0, 1);
+  lcd.print("Umid: ");
+  lcd.print(" ");
+  lcd.setCursor(7, 1);
+  lcd.print(h, 1);
+  lcd.setCursor(12, 1);
+  lcd.print("%");
+
+  delay(2000);
+
+  lcd.clear();
+  int valorLDR = analogRead(pinLDR);
+  int limiar = 500;
+
+  lcd.clear();
+  if (valorLDR < limiar) {
+    lcd.setCursor(0, 0);
+    lcd.print("Luz Alta");
+    Serial.println("Luz Alta");
+  } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Luz Baixa");
+    Serial.println("Luz Baixa");
+    digitalWrite(13, HIGH);
+    delay(1000);
+    digitalWrite(13, LOW);
+    delay(1000);
+  }
+
+  if (Serial.available() > 0) {
+    char receivedChar = Serial.read();
+    // Faça algo com o caractere recebido, se necessário
+  }
+
+  delay(2000);
+
+  Serial.print("Temp. = ");
+  Serial.print(t);
+  Serial.print(" C ");
+  Serial.print("Um. = ");
+  Serial.print(h);
+  Serial.println(" % ");
+
+  delay(2000);
+}
